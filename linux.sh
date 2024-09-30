@@ -21,7 +21,8 @@ public_ip=$(curl -s ifconfig.me)
 
 #get routing info
 upstream_gateway=$(ip route | grep default | awk '{print $3}')
-netmask=$(ifconfig | grep -A1 "$upstream_gateway" | grep 'Mask' | awk '{print $4}' | cut -d: -f2)
+netmask=$(ip addr show | grep -A3 "$upstream_gateway" | grep 'inet ' | awk '{print $2}' | cut -d/ -f2)
+netmask="255.255.255.$((256 - (1 << (32 - netmask))))"
 
 #display info
 echo "Your public IP: $public_ip"
