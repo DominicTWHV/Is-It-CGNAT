@@ -3,18 +3,9 @@ $public_ip = (Invoke-RestMethod -Uri "http://ifconfig.me").Trim()
 
 #get routing info
 $gateway = (Get-NetRoute | Where-Object { $_.DestinationPrefix -eq "0.0.0.0/0" }).NextHop
-$netmask = (Get-NetIPAddress -InterfaceAlias (Get-NetIPInterface -AddressFamily IPv4 | Select-Object -First 1).InterfaceAlias | Where-Object { $_.IPAddress -eq $gateway }).PrefixLength
 
-function Get-SubnetMask {
-    param (
-        [int]$prefixLength
-    )
-    
-    $mask = 0xFFFFFFFF -band (-1 -shl (32 - $prefixLength))
-    return [System.Net.IPAddress]::Parse(($mask -bor 0).ToString().Split(' ')[-1])
-}
-
-$subnetMask = Get-SubnetMask -prefixLength $netmask
+$ipconfig_output = ipconfig
+$subnet_mask = ($ipconfig_output | Select-String -Pattern "Subnet Mask" | ForEach-Object { $_.ToString().Trim().Split(':')[1].Trim() })[0]
 
 #display info
 Write-Host "Your public IP: $public_ip"
