@@ -1,5 +1,21 @@
 #!/bin/bash
 
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+#check if traceroute is installed
+if ! command_exists traceroute; then
+    echo "Installing traceroute for you."
+    sudo apt install -y traceroute
+
+    #check if successful
+    if ! command_exists traceroute; then
+        echo "Failed to install traceroute. Please install it manually!"
+        exit 1
+    fi
+fi
+
 #obtain public ip of yours
 public_ip=$(curl -s ifconfig.me)
 
