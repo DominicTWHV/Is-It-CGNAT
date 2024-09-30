@@ -3,7 +3,7 @@
 
 **Disclaimer:**
 
-Using traceroute is the fastest, however not the most accurate approach to this. If the script may falsly report positives when too many hops are performed (if you are using a VPS like OCI or AWS). Always check with your router's WAN port to confirm.
+Using traceroute is the fastest, however not the most accurate approach to this. If the script may falsly report positives/negatives. If unsure, check your router's WAN interface to confirm it.
 
 **Linux Users:**
 
