@@ -17,7 +17,7 @@ $traceroute_output = tracert -h 2 $public_ip 2>$null
 
 #check if private ip ranges exist
 if ($traceroute_output -match '10\.|172\.(1[6-9]|2[0-9]|3[01])|192\.168|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])') {
-    Write-Host "You may be behind CGNAT! For a definitive answer, log into your router at $gateway with the correct credentials. You should be able to find these on your router."
+    Write-Host "You may be behind CGNAT! For a definitive answer, log into your router at $upstream_gateway with the correct credentials. You should be able to find these on your router."
 } else {
     Write-Host "You are not behind CGNAT"
 }
