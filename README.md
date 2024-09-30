@@ -1,5 +1,10 @@
 # Quickly check if you are behind CGNAT!
 
+
+**Disclaimer:**
+
+Using traceroute is the fastest, however not the most accurate approach to this. If the script may falsly report positives when too many hops are performed (if you are using a VPS like OCI or AWS). Always check with your router's WAN port to confirm.
+
 **Linux Users:**
 
 Run the following in your terminal:
