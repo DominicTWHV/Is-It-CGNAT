@@ -58,11 +58,6 @@ fi
 
 netmask=$(ip addr show "$interface" | grep 'inet ' | awk '{print $2}' | cut -d/ -f2)
 
-#check if netmask
-if [ -z "$netmask" ]; then
-    color_echo "red" "Failed to retrieve netmask. This is still work in progress, so no worries."
-fi
-
 #cidr -> *.*.*.*
 if [ "$netmask" -le 30 ]; then
     netmask="255.255.255.$((256 - (1 << (32 - netmask))))"
@@ -71,8 +66,8 @@ else
 fi
 
 #echo info
-color_echo "blue" "Your public IP: $public_ip"
-color_echo "blue" "Your upstream gateway: $upstream_gateway"
+color_echo "blue" "Public IP: $public_ip"
+color_echo "blue" Upstream gateway: $upstream_gateway"
 color_echo "blue" "Interface: $interface"
 color_echo "blue" "Netmask: $netmask"
 
