@@ -51,8 +51,6 @@ netmask=$(ip addr show | grep -A3 "$upstream_gateway" | grep 'inet ' | awk '{pri
 if [ -z "$netmask" ]; then
     color_echo "red" "Failed to retrieve netmask. Please check your network configuration."
     exit 1
-else
-    color_echo "green" "Fetched netmask: $netmask"
 fi
 
 #fetch mask
