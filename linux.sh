@@ -47,6 +47,12 @@ public_ip=$(curl -s ipinfo.io/ip)
 upstream_gateway=$(ip route | grep default | awk '{print $3}')
 netmask=$(ip addr show | grep -A3 "$upstream_gateway" | grep 'inet ' | awk '{print $2}' | cut -d/ -f2)
 
+#debug output
+if [ -z "$netmask" ]; then
+    color_echo "red" "Failed to retrieve netmask. Please check your network configuration."
+    exit 1
+fi
+
 #fetch mask
 if [ "$netmask" -le 30 ]; then
     netmask="255.255.255.$((256 - (1 << (32 - netmask))))"
