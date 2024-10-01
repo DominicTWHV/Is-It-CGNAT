@@ -43,9 +43,19 @@ fi
 #get public ip
 public_ip=$(curl -s ipinfo.io/ip)
 
-#get routing info
-upstream_gateway=$(ip route | grep default | awk '{print $3}')
-interface=$(ip route get "$upstream_gateway" | awk '{print $5; exit}')
+# Get routing information from 'ip r'
+default_route=$(ip r | grep default)
+
+#fetch routing info
+upstream_gateway=$(echo "$default_route" | awk '{print $3}')
+interface=$(echo "$default_route" | awk '{print $5}')
+
+#check if gateway and inface is found
+if [ -z "$upstream_gateway" ] || [ -z "$interface" ]; then
+    color_echo "red" "Failed to retrieve network information. Please check your network configuration."
+    exit 1
+fi
+
 netmask=$(ip addr show "$interface" | grep 'inet ' | awk '{print $2}' | cut -d/ -f2)
 
 #check if netmask
@@ -54,17 +64,17 @@ if [ -z "$netmask" ]; then
     exit 1
 fi
 
-#calculate netmask
+#cidr -> *.*.*.*
 if [ "$netmask" -le 30 ]; then
     netmask="255.255.255.$((256 - (1 << (32 - netmask))))"
 else
     netmask="255.255.255.255"
 fi
 
-
-#display info
+#echo info
 color_echo "blue" "Your public IP: $public_ip"
 color_echo "blue" "Your upstream gateway: $upstream_gateway"
+color_echo "blue" "Interface: $interface"
 color_echo "blue" "Netmask: $netmask"
 
 #traceroute
