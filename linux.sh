@@ -60,8 +60,7 @@ netmask=$(ip addr show "$interface" | grep 'inet ' | awk '{print $2}' | cut -d/ 
 
 #check if netmask
 if [ -z "$netmask" ]; then
-    color_echo "red" "Failed to retrieve netmask. Please check your network configuration."
-    exit 1
+    color_echo "red" "Failed to retrieve netmask. This is still work in progress, so no worries."
 fi
 
 #cidr -> *.*.*.*
