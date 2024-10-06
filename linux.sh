@@ -67,7 +67,7 @@ fi
 
 #echo info
 color_echo "blue" "Public IP: $public_ip"
-color_echo "blue" Upstream gateway: $upstream_gateway"
+color_echo "blue" "Upstream gateway: $upstream_gateway"
 color_echo "blue" "Interface: $interface"
 color_echo "blue" "Netmask: $netmask"
 
