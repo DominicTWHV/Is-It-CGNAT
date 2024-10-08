@@ -5,6 +5,8 @@
 
 Using traceroute is the fastest, however not the most accurate approach to this. If the script may falsly report positives/negatives. If unsure, check your router's WAN interface to confirm it.
 
+The `Netmask` output may be slightly broken. However that does not affect the functions.
+
 **Linux Users:**
 
 Run the following in your terminal:
