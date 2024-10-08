@@ -16,7 +16,20 @@ $traceroute_output = $null
 if ($public_ipv4) {
     #if v4
     $gateway = (Get-NetRoute | Where-Object { $_.DestinationPrefix -eq "0.0.0.0/0" }).NextHop
-    $subnet_mask = ($ipconfig_output | Select-String -Pattern "Subnet Mask" | ForEach-Object { $_.ToString().Trim().Split(':')[1].Trim() })[0]
+    
+    $networkAdapter = Get-NetIPAddress | Where-Object { $_.AddressFamily -eq "IPv4" -and $_.PrefixOrigin -ne "WellKnown" }
+    
+    $subnet_mask = $networkAdapter.PrefixLength
+    
+    #cidr to *.*.*.*
+    $cidr_to_netmask = @{
+        8  = '255.0.0.0'
+        16 = '255.255.0.0'
+        24 = '255.255.255.0'
+        32 = '255.255.255.255'
+    }
+    
+    $subnet_mask = $cidr_to_netmask[$subnet_mask]
     
     #traceroute for v4
     try {
@@ -43,7 +56,10 @@ if ($public_ipv4) {
 } elseif ($public_ipv6) {
     #use v6 if v4 doesnt exist
     $gateway = (Get-NetRoute -AddressFamily IPv6 | Where-Object { $_.DestinationPrefix -eq "::/0" }).NextHop
-    $subnet_mask = ($ipconfig_output | Select-String -Pattern "IPv6 Subnet Prefix" | ForEach-Object { $_.ToString().Trim().Split(':')[1].Trim() })[0]
+
+    $networkAdapter_v6 = Get-NetIPAddress | Where-Object { $_.AddressFamily -eq "IPv6" -and $_.PrefixOrigin -ne "WellKnown" }
+    
+    $subnet_mask = $networkAdapter_v6.PrefixLength
     
     #traceroute with v6
     try {
@@ -63,7 +79,7 @@ if ($public_ipv4) {
     #display info for v6
     Write-Host "Your public IPv6: $public_ipv6"
     Write-Host "Your upstream gateway (IPv6): $gateway"
-    Write-Host "Netmask (IPv6): $subnet_mask"
+    Write-Host "Netmask (IPv6): $subnet_mask (CIDR)"
     Write-Host "`nTraceroute output (first 2 hops for IPv6):"
     Write-Host $traceroute_output
 
