@@ -18,18 +18,26 @@ if ($public_ipv4) {
     $gateway = (Get-NetRoute | Where-Object { $_.DestinationPrefix -eq "0.0.0.0/0" }).NextHop
     
     $networkAdapter = Get-NetIPAddress | Where-Object { $_.AddressFamily -eq "IPv4" -and $_.PrefixOrigin -ne "WellKnown" }
+
+    if ($networkAdapter.Count -gt 1) {
+        $networkAdapter = $networkAdapter[0]
+    }
     
     $subnet_mask = $networkAdapter.PrefixLength
     
-    #cidr to *.*.*.*
-    $cidr_to_netmask = @{
-        8  = '255.0.0.0'
-        16 = '255.255.0.0'
-        24 = '255.255.255.0'
-        32 = '255.255.255.255'
+    #cidr to 0.0.0.0
+    function Convert-CidrToNetmask {
+        param ([int]$cidr)
+        
+        #calc mask by bit shifting
+        $mask = [math]::Pow(2, 32) - [math]::Pow(2, 32 - $cidr)
+        $octets = for ($i = 3; $i -ge 0; $i--) {
+            (($mask -band ([math]::Pow(256, $i))) -shr (8 * $i))
+        }
+        return ($octets -join '.')
     }
-    
-    $subnet_mask = $cidr_to_netmask[$subnet_mask]
+
+    $subnet_mask = Convert-CidrToNetmask $subnet_mask
     
     #traceroute for v4
     try {
@@ -57,8 +65,17 @@ if ($public_ipv4) {
     #use v6 if v4 doesnt exist
     $gateway = (Get-NetRoute -AddressFamily IPv6 | Where-Object { $_.DestinationPrefix -eq "::/0" }).NextHop
 
-    $networkAdapter_v6 = Get-NetIPAddress | Where-Object { $_.AddressFamily -eq "IPv6" -and $_.PrefixOrigin -ne "WellKnown" }
+    $networkAdapter_v6 = Get-NetIPAddress | Where-Object {
+        $_.AddressFamily -eq "IPv6" -and $_.PrefixOrigin -ne "WellKnown" -and $_.AddressOrigin -eq "Dhcp"
+    }
     
+    if ($null -eq $networkAdapter_v6) {
+        Write-Output "Error: No IPv6 Addr Found."
+    } elseif ($networkAdapter_v6.Count -gt 1) {
+        $networkAdapter_v6 = $networkAdapter_v6[0]
+    }
+    
+    #use prefix length instead of converting
     $subnet_mask = $networkAdapter_v6.PrefixLength
     
     #traceroute with v6
