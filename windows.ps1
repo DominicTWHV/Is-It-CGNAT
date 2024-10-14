@@ -16,29 +16,7 @@ $traceroute_output = $null
 if ($public_ipv4) {
     #if v4
     $gateway = (Get-NetRoute | Where-Object { $_.DestinationPrefix -eq "0.0.0.0/0" }).NextHop
-    
-    $networkAdapter = Get-NetIPAddress | Where-Object { $_.AddressFamily -eq "IPv4" -and $_.PrefixOrigin -ne "WellKnown" }
 
-    if ($networkAdapter.Count -gt 1) {
-        $networkAdapter = $networkAdapter[0]
-    }
-    
-    $subnet_mask = $networkAdapter.PrefixLength
-    
-    #cidr to 0.0.0.0
-    function Convert-CidrToNetmask {
-        param ([int]$cidr)
-        
-        #calc mask by bit shifting
-        $mask = [math]::Pow(2, 32) - [math]::Pow(2, 32 - $cidr)
-        $octets = for ($i = 3; $i -ge 0; $i--) {
-            (($mask -band ([math]::Pow(256, $i))) -shr (8 * $i))
-        }
-        return ($octets -join '.')
-    }
-
-    $subnet_mask = Convert-CidrToNetmask $subnet_mask
-    
     #traceroute for v4
     try {
         $traceroute_output = tracert -h 2 $public_ipv4 2>$null
