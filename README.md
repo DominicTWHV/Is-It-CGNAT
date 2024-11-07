@@ -7,6 +7,8 @@ Using traceroute is the fastest, however not the most accurate approach to this.
 
 The `Netmask` output may be slightly broken. However that does not affect the functions.
 
+The functionality of the script is still being tested. Feel free to open a PR/issue if improvements can be made.
+
 **Linux Users:**
 
 Run the following in your terminal:
