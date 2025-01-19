@@ -30,16 +30,16 @@ function Check-CGNAT {
 
     $cgnat_ranges = '10\.|172\.(1[6-9]|2[0-9]|3[01])|192\.168|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])|fc00|fd00|::/128|::1'
     if ($traceroute_output -match $cgnat_ranges) {
-        Write-Host "You may be behind CGNAT for $address_family! Log into your router at $gateway with the correct credentials."
+        Write-Host "You may be behind CGNAT for ${address_family}! Log into your router at ${gateway} with the correct credentials."
     } else {
-        Write-Host "You are not behind CGNAT for $address_family."
+        Write-Host "You are not behind CGNAT for ${address_family}."
     }
 
     # Display results
-    Write-Host "Your public $address_family: $public_ip"
-    Write-Host "Your upstream gateway ($address_family): $gateway"
-    Write-Host "Netmask ($address_family): $subnet_mask"
-    Write-Host "`nTraceroute output (first 2 hops for $address_family):"
+    Write-Host "Your public ${address_family}: ${public_ip}"
+    Write-Host "Your upstream gateway (${address_family}): ${gateway}"
+    Write-Host "Netmask (${address_family}): ${subnet_mask}"
+    Write-Host "`nTraceroute output (first 2 hops for ${address_family}):"
     Write-Host $traceroute_output
 }
 
