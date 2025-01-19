@@ -1,83 +1,70 @@
-#obtain public ip
+# Obtain public IP
 try {
     $public_ipv4 = (Invoke-RestMethod -Uri "http://ifconfig.me/ip").Trim()
     $public_ipv6 = (Invoke-RestMethod -Uri "http://ifconfig.co/ip").Trim()
 } catch {
     Write-Host "Error obtaining public IP. Check your internet connection."
-    exit
+    exit 1
 }
 
-#init vars
+# Initialize variables
 $gateway = $null
 $subnet_mask = $null
 $traceroute_output = $null
 
-#determine which code to use
-if ($public_ipv4) {
-    #if v4
-    $gateway = (Get-NetRoute | Where-Object { $_.DestinationPrefix -eq "0.0.0.0/0" }).NextHop
+# Function to perform traceroute and check CGNAT
+function Check-CGNAT {
+    param (
+        [string]$public_ip,
+        [string]$address_family,
+        [string]$gateway,
+        [string]$subnet_mask
+    )
 
-    #traceroute for v4
     try {
-        $traceroute_output = tracert -h 2 $public_ipv4 2>$null
+        $traceroute_output = tracert -h 2 $public_ip 2>$null
     } catch {
-        Write-Host "Error during traceroute for IPv4. Check your network settings."
-        exit
+        Write-Host "Error during traceroute for $address_family. Check your network settings."
+        exit 1
     }
 
-    #check traceroute ranges for v4
-    if ($traceroute_output -match '10\.|172\.(1[6-9]|2[0-9]|3[01])|192\.168|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])') {
-        Write-Host "You may be behind CGNAT for IPv4! Log into your router at $gateway with the correct credentials."
+    $cgnat_ranges = '10\.|172\.(1[6-9]|2[0-9]|3[01])|192\.168|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])|fc00|fd00|::/128|::1'
+    if ($traceroute_output -match $cgnat_ranges) {
+        Write-Host "You may be behind CGNAT for $address_family! Log into your router at $gateway with the correct credentials."
     } else {
-        Write-Host "You are not behind CGNAT for IPv4."
+        Write-Host "You are not behind CGNAT for $address_family."
     }
 
-    #display v4 results
-    Write-Host "Your public IPv4: $public_ipv4"
-    Write-Host "Your upstream gateway (IPv4): $gateway"
-    Write-Host "Netmask (IPv4): $subnet_mask"
-    Write-Host "`nTraceroute output (first 2 hops for IPv4):"
+    # Display results
+    Write-Host "Your public $address_family: $public_ip"
+    Write-Host "Your upstream gateway ($address_family): $gateway"
+    Write-Host "Netmask ($address_family): $subnet_mask"
+    Write-Host "`nTraceroute output (first 2 hops for $address_family):"
     Write-Host $traceroute_output
+}
 
+# Determine which code to use
+if ($public_ipv4) {
+    # IPv4
+    $gateway = (Get-NetRoute | Where-Object { $_.DestinationPrefix -eq "0.0.0.0/0" }).NextHop
+    Check-CGNAT -public_ip $public_ipv4 -address_family "IPv4" -gateway $gateway -subnet_mask $subnet_mask
 } elseif ($public_ipv6) {
-    #use v6 if v4 doesnt exist
+    # IPv6
     $gateway = (Get-NetRoute -AddressFamily IPv6 | Where-Object { $_.DestinationPrefix -eq "::/0" }).NextHop
-
+    
     $networkAdapter_v6 = Get-NetIPAddress | Where-Object {
         $_.AddressFamily -eq "IPv6" -and $_.PrefixOrigin -ne "WellKnown" -and $_.AddressOrigin -eq "Dhcp"
     }
     
     if ($null -eq $networkAdapter_v6) {
-        Write-Output "Error: No IPv6 Addr Found."
+        Write-Host "Error: No IPv6 Addr Found."
+        exit 1
     } elseif ($networkAdapter_v6.Count -gt 1) {
         $networkAdapter_v6 = $networkAdapter_v6[0]
     }
     
-    #use prefix length instead of converting
     $subnet_mask = $networkAdapter_v6.PrefixLength
-    
-    #traceroute with v6
-    try {
-        $traceroute_output = tracert -h 2 -d $public_ipv6 2>$null
-    } catch {
-        Write-Host "Error during traceroute for IPv6. Check your network settings."
-        exit
-    }
-
-    #check cgnat ranges with v6
-    if ($traceroute_output -match 'fc00|fd00|::/128|::1') {
-        Write-Host "You may be behind CGNAT for IPv6! Log into your router at $gateway with the correct credentials."
-    } else {
-        Write-Host "You are not behind CGNAT for IPv6."
-    }
-
-    #display info for v6
-    Write-Host "Your public IPv6: $public_ipv6"
-    Write-Host "Your upstream gateway (IPv6): $gateway"
-    Write-Host "Netmask (IPv6): $subnet_mask (CIDR)"
-    Write-Host "`nTraceroute output (first 2 hops for IPv6):"
-    Write-Host $traceroute_output
-
+    Check-CGNAT -public_ip $public_ipv6 -address_family "IPv6" -gateway $gateway -subnet_mask $subnet_mask
 } else {
     Write-Host "No public IP address found. Check your internet connection."
 }
