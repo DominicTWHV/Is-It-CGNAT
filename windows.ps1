@@ -23,10 +23,13 @@ function Check-Port {
         [string]$public_ip,
         [int]$port
     )
-    
     try {
-        $port_status = Invoke-RestMethod -Uri "https://api.portchecktool.com/check?ip=$public_ip&port=$port" -Method Get
-        return $port_status.open
+        $body = @{
+            host  = $public_ip
+            ports = @($port)
+        } | ConvertTo-Json
+        $port_status = Invoke-RestMethod -Uri "https://portchecker.io/api/query" -Method Post -Body $body -ContentType 'application/json'
+        return $port_status.status -eq 'open'
     } catch {
         Write-Host "[ERROR] Error checking port $port. Ensure you have internet access." -ForegroundColor Red
     }
@@ -72,15 +75,14 @@ if ($public_ipv4) {
     $subnet_mask = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.PrefixOrigin -eq 'Dhcp' }).PrefixLength
     
     Write-Host "[INFO] Default Gateway: $gateway" -ForegroundColor Cyan
-    Write-Host "[INFO] Subnet Mask: $subnet_mask" -ForegroundColor Cyan
     
     $is_cgnat = Check-CGNAT -public_ip $public_ipv4 -address_family "IPv4" -gateway $gateway -subnet_mask $subnet_mask
     $is_port_open = Check-Port -public_ip $public_ipv4 -port $port
     
     if ($is_cgnat) {
-        Write-Host "[WARNING] You may be behind CGNAT for IPv4! Log into your router at ${gateway} with the correct credentials." -ForegroundColor Yellow
+        Write-Host "[WARNING] You may be behind CGNAT for IPv4! Log into your router at ${gateway} with the correct credentials." -ForegroundColor Red
     } elseif (-not $is_port_open) {
-        Write-Host "[ERROR] You should not be behind CGNAT for IPv4, but your TCP port $port is not open." -ForegroundColor Red
+        Write-Host "[ERROR] You should not be behind CGNAT for IPv4, but your TCP port $port is not open." -ForegroundColor Yellow
     } else {
         Write-Host "[SUCCESS] You are not behind CGNAT for IPv4 and TCP port $port is visible. Your server should not be having connection issues." -ForegroundColor Green
     }
