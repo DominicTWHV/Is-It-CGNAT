@@ -29,7 +29,7 @@ function Check-Port {
             ports = @($port)
         } | ConvertTo-Json
         $port_status = Invoke-RestMethod -Uri "https://portchecker.io/api/query" -Method Post -Body $body -ContentType 'application/json'
-        return $port_status.status -eq 'open'
+        return $port_status.status
     } catch {
         Write-Host "[ERROR] Error checking port $port. Ensure you have internet access." -ForegroundColor Red
     }
@@ -77,7 +77,6 @@ if ($public_ipv4) {
     
     $is_cgnat = Check-CGNAT -public_ip $public_ipv4 -address_family "IPv4" -gateway $gateway
     $is_port_open = Check-Port -public_ip $public_ipv4 -port $port
-    Write-Host $is_cgnat
     if ($is_cgnat) {
         Write-Host "[WARNING] You may be behind CGNAT for IPv4! Log into your router at ${gateway} with the correct credentials." -ForegroundColor Red
     } elseif (-not $is_port_open) {
