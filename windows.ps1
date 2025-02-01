@@ -39,7 +39,7 @@ function Check-CGNAT {
     param (
         [string]$public_ip,
         [string]$address_family,
-        [string]$gateway,
+        [string]$gateway
     )
     
     try {
