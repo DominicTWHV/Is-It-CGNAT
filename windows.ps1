@@ -36,7 +36,8 @@ function Check-CGNAT {
     
     try {
         Write-Host "[INFO] Running traceroute for $address_family..." -ForegroundColor Yellow
-        $traceroute_output = tracert -h 2 $public_ip 2>$null
+        $traceroute_output = $(tracert -h 2 $public_ip 2>&1)
+        echo $traceroute_output
     } catch {
         Write-Host "[ERROR] Error during traceroute for $address_family. Check your network settings." -ForegroundColor Red
         exit 1
