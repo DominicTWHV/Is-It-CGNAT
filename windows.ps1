@@ -40,13 +40,13 @@ function Check-CGNAT {
         [string]$public_ip,
         [string]$address_family,
         [string]$gateway,
-        [string]$subnet_mask
     )
     
     try {
         Write-Host "[INFO] Running traceroute for $address_family..." -ForegroundColor Yellow
-        $traceroute_output = $(tracert -h 2 $public_ip 2>&1)
-        echo $traceroute_output
+        $traceroute_output = tracert -h 2 $public_ip 2>&1
+        Write-Host $traceroute_output
+        Write-Host "[INFO] --------------------------------------" -ForegroundColor Yellow
     } catch {
         Write-Host "[ERROR] Error during traceroute for $address_family. Check your network settings." -ForegroundColor Red
     }
@@ -72,13 +72,12 @@ $port = Read-Host "Which port does your Minecraft server run on? (e.g., 25565)"
 
 if ($public_ipv4) {
     $gateway = (Get-NetRoute | Where-Object { $_.DestinationPrefix -eq "0.0.0.0/0" }).NextHop
-    $subnet_mask = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.PrefixOrigin -eq 'Dhcp' }).PrefixLength
     
     Write-Host "[INFO] Default Gateway: $gateway" -ForegroundColor Cyan
     
-    $is_cgnat = Check-CGNAT -public_ip $public_ipv4 -address_family "IPv4" -gateway $gateway -subnet_mask $subnet_mask
+    $is_cgnat = Check-CGNAT -public_ip $public_ipv4 -address_family "IPv4" -gateway $gateway
     $is_port_open = Check-Port -public_ip $public_ipv4 -port $port
-    
+    Write-Host $is_cgnat
     if ($is_cgnat) {
         Write-Host "[WARNING] You may be behind CGNAT for IPv4! Log into your router at ${gateway} with the correct credentials." -ForegroundColor Red
     } elseif (-not $is_port_open) {
@@ -91,9 +90,8 @@ if ($public_ipv4) {
     $subnet_mask = (Get-NetIPAddress -AddressFamily IPv6 | Where-Object { $_.PrefixOrigin -eq 'Dhcp' }).PrefixLength
     
     Write-Host "[INFO] Default Gateway (IPv6): $gateway" -ForegroundColor Cyan
-    Write-Host "[INFO] Subnet Mask (IPv6): $subnet_mask" -ForegroundColor Cyan
     
-    $is_cgnat = Check-CGNAT -public_ip $public_ipv6 -address_family "IPv6" -gateway $gateway -subnet_mask $subnet_mask
+    $is_cgnat = Check-CGNAT -public_ip $public_ipv6 -address_family "IPv6" -gateway $gateway
     $is_port_open = Check-Port -public_ip $public_ipv6 -port $port
 
     if ($is_cgnat) {
