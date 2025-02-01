@@ -1,6 +1,6 @@
 try {
     $public_ipv4 = (Invoke-RestMethod -Uri "http://ifconfig.me/ip").Trim()
-    $public_ipv6 = (Invoke-RestMethod -Uri "http://ifconfig.co/ip").Trim()
+    $public_ipv6 = (Invoke-RestMethod -Uri "https://v6.ipinfo.io/").Trim()
     Write-Host "[INFO] Public IPv4: $public_ipv4" -ForegroundColor Cyan
     Write-Host "[INFO] Public IPv6: $public_ipv6" -ForegroundColor Cyan
 } catch {
