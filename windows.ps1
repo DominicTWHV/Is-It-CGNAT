@@ -46,11 +46,20 @@ function Check-CGNAT {
         echo $traceroute_output
     } catch {
         Write-Host "[ERROR] Error during traceroute for $address_family. Check your network settings." -ForegroundColor Red
-        exit 1
     }
-
-    $cgnat_ranges = '10\\.|172\\.(1[6-9]|2[0-9]|3[01])|192\\.168|100\\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])|fc00|fd00|::/128|::1'
-    return ($traceroute_output -match $cgnat_ranges)
+    $cgnat_ranges = '100\\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])|198\\.18\\.|198\\.51\\.100\\.|203\\.0\\.113\\.'
+    $internal_ip_count = 0
+    foreach ($line in $traceroute_output) {
+        if ($line -match $cgnat_ranges) {
+            $internal_ip_count++
+            if ($internal_ip_count -gt 1) {
+                Write-Host "[INFO] CGNAT detected! A second internal IP was found in the traceroute." -ForegroundColor Red
+                return $true
+            }
+        }
+    }
+    Write-Host "[INFO] No CGNAT detected. Only one or no internal IPs found." -ForegroundColor Green
+    return $false
 }
 
 Write-Host "Please confirm your Minecraft server is up and running before pressing enter to proceed." -ForegroundColor Green
@@ -67,7 +76,7 @@ if ($public_ipv4) {
     
     $is_cgnat = Check-CGNAT -public_ip $public_ipv4 -address_family "IPv4" -gateway $gateway -subnet_mask $subnet_mask
     $is_port_open = Check-Port -public_ip $public_ipv4 -port $port
-
+    
     if ($is_cgnat) {
         Write-Host "[WARNING] You may be behind CGNAT for IPv4! Log into your router at ${gateway} with the correct credentials." -ForegroundColor Yellow
     } elseif (-not $is_port_open) {
