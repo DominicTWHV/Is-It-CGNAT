@@ -29,9 +29,15 @@ function Check-Port {
             ports = @($port)
         } | ConvertTo-Json
         $port_status = Invoke-RestMethod -Uri "https://portchecker.io/api/query" -Method Post -Body $body -ContentType 'application/json'
-        return $port_status.status
+        $port_check = $port_status.check | Where-Object { $_.port -eq $port }
+        if ($port_check -and $port_check.status) {
+            return $true
+        } else {
+            return $false
+        }
     } catch {
         Write-Host "[ERROR] Error checking port $port. Ensure you have internet access." -ForegroundColor Red
+        return $false
     }
 }
 
