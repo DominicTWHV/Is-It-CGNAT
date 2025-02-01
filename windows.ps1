@@ -65,10 +65,7 @@ function Check-CGNAT {
     return $false
 }
 
-Write-Host "Please confirm your Minecraft server is up and running before pressing enter to proceed." -ForegroundColor Green
-$null = Read-Host
-
-$port = Read-Host "Which port does your Minecraft server run on? (e.g., 25565)"
+$port = Read-Host "Which port does your Minecraft server run on? (e.g., 25565) Confirm it is running before you press enter on this line."
 
 if ($public_ipv4) {
     $gateway = (Get-NetRoute | Where-Object { $_.DestinationPrefix -eq "0.0.0.0/0" }).NextHop
