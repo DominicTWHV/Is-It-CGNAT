@@ -1,11 +1,17 @@
 try {
     $public_ipv4 = (Invoke-RestMethod -Uri "http://ifconfig.me/ip").Trim()
-    $public_ipv6 = (Invoke-RestMethod -Uri "https://v6.ipinfo.io/").Trim()
     Write-Host "[INFO] Public IPv4: $public_ipv4" -ForegroundColor Cyan
+} catch {
+    Write-Host "[ERROR] Failed to retrieve public IPv4 address. Ensure you are connected to the internet." -ForegroundColor Red
+    $public_ipv4 = $null
+}
+
+try {
+    $public_ipv6 = (Invoke-RestMethod -Uri "https://v6.ipinfo.io/ip").Trim()
     Write-Host "[INFO] Public IPv6: $public_ipv6" -ForegroundColor Cyan
 } catch {
-    Write-Host "[ERROR] Error executing checks. Please check that you are connected to the internet." -ForegroundColor Red
-    exit 1
+    Write-Host "[WARNING] No public IPv6 detected. You may not have an IPv6 address. That is fine as long as you don't plan to run your server on IPv6." -ForegroundColor Yellow
+    $public_ipv6 = $null
 }
 
 $gateway = $null
